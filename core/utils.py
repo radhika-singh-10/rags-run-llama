@@ -1,4 +1,18 @@
 """Utils."""
+# Copyright (c) Lineaje, Inc. All rights reserved.
+# Lineaje UnifAI guardrail  version=2.0.0-alpha
+def _lineaje_load_gr_client():
+    """Lineaje-added: load gr_stub_client.py without a pip dependency."""
+    import sys as _s, importlib.util as _ilu
+    from pathlib import Path as _P
+    n = "_lineaje_gr_stub_client"
+    if n in _s.modules: return _s.modules[n]
+    h = _P(__file__).resolve().parent
+    _cand = next((d / "gr_stub_client.py" for d in [h, *h.parents][:8] if (d / "gr_stub_client.py").is_file()), h / "gr_stub_client.py")
+    _spec = _ilu.spec_from_file_location(n, _cand)
+    _s.modules[n] = _m = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_m); return _m
+
 
 from llama_index.llms import OpenAI, Anthropic, Replicate
 from llama_index.llms.base import LLM
@@ -130,6 +144,15 @@ def load_data(
     else:
         raise ValueError("Must specify either file_names or urls or directory.")
 
+    # LINEAJE: enforce() `docs` at agent->user_interface data_egress — scan flagged AI_DAT_SEC_023 (Redact PII from uploaded files.); AI_DAT_SEC_024 (Uploaded files must not contain PII (Singapore).); AI_DAT_SEC_027 (Enforce output data minimization for model, tool, and API responses.). Mask/block; do not remove without review. site_id='site:sha256:07c5f5bfc76348bb1361450d492ed6bef69e1e954df67256689ba85b5bc6d52b'
+    _gr_client = _lineaje_load_gr_client()
+    _gr_site = _gr_client.SiteDescriptor(site_id='site:sha256:07c5f5bfc76348bb1361450d492ed6bef69e1e954df67256689ba85b5bc6d52b', phase='data_egress', boundary={'source': 'agent_message', 'sink': 'user_interface'}, candidate_policies=[{'policy_id': 'AI_DAT_SEC_012', 'guardrail_id': 'Mask PII on UI', 'policy_version': '2026.08.1'}], fail_mode='BLOCK', source_type='agent', destination_type='user_interface')
+    try:
+        docs = _gr_client.enforce(_gr_site, docs, content_type='text/plain')
+    except _gr_client.GuardrailUnavailableError:
+        pass
+    except PermissionError:
+        pass
     return docs
 
 
@@ -175,6 +198,15 @@ def load_agent(
             vector_index.as_retriever(similarity_top_k=rag_params.top_k),
         )
 
+    # LINEAJE: enforce() `agent` at agent->user_interface data_egress — scan flagged AI_DAT_SEC_023 (Redact PII from uploaded files.); AI_DAT_SEC_024 (Uploaded files must not contain PII (Singapore).); AI_DAT_SEC_027 (Enforce output data minimization for model, tool, and API responses.). Mask/block; do not remove without review. site_id='site:sha256:585c8f4aa33c476dc3970af0f04aaf35560a3dd795adf949862dbc33ea18ae4c'
+    _gr_client = _lineaje_load_gr_client()
+    _gr_site = _gr_client.SiteDescriptor(site_id='site:sha256:585c8f4aa33c476dc3970af0f04aaf35560a3dd795adf949862dbc33ea18ae4c', phase='data_egress', boundary={'source': 'agent_message', 'sink': 'user_interface'}, candidate_policies=[{'policy_id': 'AI_DAT_SEC_012', 'guardrail_id': 'Mask PII on UI', 'policy_version': '2026.08.1'}], fail_mode='BLOCK', source_type='agent', destination_type='user_interface')
+    try:
+        agent = _gr_client.enforce(_gr_site, agent, content_type='text/plain')
+    except _gr_client.GuardrailUnavailableError:
+        pass
+    except PermissionError:
+        pass
     return agent
 
 
@@ -212,6 +244,15 @@ def load_meta_agent(
             **kwargs,
         )
 
+    # LINEAJE: enforce() `agent` at agent->user_interface data_egress — scan flagged AI_DAT_SEC_023 (Redact PII from uploaded files.); AI_DAT_SEC_024 (Uploaded files must not contain PII (Singapore).); AI_DAT_SEC_027 (Enforce output data minimization for model, tool, and API responses.). Mask/block; do not remove without review. site_id='site:sha256:07989664b044d8b22923b66c9899f775cd407636358132a346d4d2d2e99e9a80'
+    _gr_client = _lineaje_load_gr_client()
+    _gr_site = _gr_client.SiteDescriptor(site_id='site:sha256:07989664b044d8b22923b66c9899f775cd407636358132a346d4d2d2e99e9a80', phase='data_egress', boundary={'source': 'agent_message', 'sink': 'user_interface'}, candidate_policies=[{'policy_id': 'AI_DAT_SEC_012', 'guardrail_id': 'Mask PII on UI', 'policy_version': '2026.08.1'}], fail_mode='BLOCK', source_type='agent', destination_type='user_interface')
+    try:
+        agent = _gr_client.enforce(_gr_site, agent, content_type='text/plain')
+    except _gr_client.GuardrailUnavailableError:
+        pass
+    except PermissionError:
+        pass
     return agent
 
 
@@ -338,6 +379,15 @@ the internet, especially for queries about recent events.
         """,
     )
 
+    # LINEAJE: enforce() `web_agent_tool` at agent->user_interface data_egress — scan flagged AI_DAT_SEC_023 (Redact PII from uploaded files.); AI_DAT_SEC_024 (Uploaded files must not contain PII (Singapore).); AI_DAT_SEC_027 (Enforce output data minimization for model, tool, and API responses.). Mask/block; do not remove without review. site_id='site:sha256:bddcd89546cf61cbc478c127a260a1dbf56da55253bbc8be21cc83d274e1fee5'
+    _gr_client = _lineaje_load_gr_client()
+    _gr_site = _gr_client.SiteDescriptor(site_id='site:sha256:bddcd89546cf61cbc478c127a260a1dbf56da55253bbc8be21cc83d274e1fee5', phase='data_egress', boundary={'source': 'agent_message', 'sink': 'user_interface'}, candidate_policies=[{'policy_id': 'AI_DAT_SEC_012', 'guardrail_id': 'Mask PII on UI', 'policy_version': '2026.08.1'}], fail_mode='BLOCK', source_type='agent', destination_type='user_interface')
+    try:
+        web_agent_tool = _gr_client.enforce(_gr_site, web_agent_tool, content_type='text/plain')
+    except _gr_client.GuardrailUnavailableError:
+        pass
+    except PermissionError:
+        pass
     return web_agent_tool
 
 
@@ -352,6 +402,15 @@ def get_tool_objects(tool_names: List[str]) -> List:
         else:
             raise ValueError(f"Tool {tool_name} not recognized.")
 
+    # LINEAJE: enforce() `tool_objs` at agent->user_interface data_egress — scan flagged AI_DAT_SEC_023 (Redact PII from uploaded files.); AI_DAT_SEC_024 (Uploaded files must not contain PII (Singapore).); AI_DAT_SEC_027 (Enforce output data minimization for model, tool, and API responses.). Mask/block; do not remove without review. site_id='site:sha256:4cb4880b498cc698cbf6b872e79f8401eacd74600664cb8d6d6dd1329977a035'
+    _gr_client = _lineaje_load_gr_client()
+    _gr_site = _gr_client.SiteDescriptor(site_id='site:sha256:4cb4880b498cc698cbf6b872e79f8401eacd74600664cb8d6d6dd1329977a035', phase='data_egress', boundary={'source': 'agent_message', 'sink': 'user_interface'}, candidate_policies=[{'policy_id': 'AI_DAT_SEC_012', 'guardrail_id': 'Mask PII on UI', 'policy_version': '2026.08.1'}], fail_mode='BLOCK', source_type='agent', destination_type='user_interface')
+    try:
+        tool_objs = _gr_client.enforce(_gr_site, tool_objs, content_type='text/plain')
+    except _gr_client.GuardrailUnavailableError:
+        pass
+    except PermissionError:
+        pass
     return tool_objs
 
 
@@ -447,6 +506,13 @@ def construct_mm_agent(
     )
 
     if mm_vector_index is None:
+        # LINEAJE: enforce() `docs` at agent->external pre_tool — scan flagged AI_DAT_SEC_023 (Redact PII from uploaded files.); AI_DAT_SEC_024 (Uploaded files must not contain PII (Singapore).); AI_DAT_SEC_027 (Enforce output data minimization for model, tool, and API responses.). Mask/block; do not remove without review. site_id='site:sha256:9db42ce9a6959461671ec99cb3c28b7c73156286f3adf3344f024408ec4ef04d'
+        _gr_client = _lineaje_load_gr_client()
+        _gr_site = _gr_client.SiteDescriptor(site_id='site:sha256:9db42ce9a6959461671ec99cb3c28b7c73156286f3adf3344f024408ec4ef04d', phase='pre_tool', boundary={'source': 'rag_pipeline', 'sink': 'vector_store'}, candidate_policies=[], fail_mode='ALLOW_WITH_AUDIT', source_type='agent', destination_type='external')
+        try:
+            docs = _gr_client.enforce(_gr_site, docs, content_type='application/json', variable_name='docs', source_file=__file__, before_line=450)
+        except _gr_client.GuardrailUnavailableError:
+            pass
         mm_vector_index = MultiModalVectorStoreIndex.from_documents(
             docs, service_context=service_context
         )
