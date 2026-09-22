@@ -1,4 +1,18 @@
 """Agent builder."""
+# Copyright (c) Lineaje, Inc. All rights reserved.
+# Lineaje UnifAI guardrail  version=2.0.0-alpha
+def _lineaje_load_gr_client():
+    """Lineaje-added: load gr_stub_client.py without a pip dependency."""
+    import sys as _s, importlib.util as _ilu
+    from pathlib import Path as _P
+    n = "_lineaje_gr_stub_client"
+    if n in _s.modules: return _s.modules[n]
+    h = _P(__file__).resolve().parent
+    _cand = next((d / "gr_stub_client.py" for d in [h, *h.parents][:8] if (d / "gr_stub_client.py").is_file()), h / "gr_stub_client.py")
+    _spec = _ilu.spec_from_file_location(n, _cand)
+    _s.modules[n] = _m = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_m); return _m
+
 
 from llama_index.llms import ChatMessage
 from llama_index.prompts import ChatPromptTemplate
@@ -99,6 +113,17 @@ class RAGAgentBuilder(BaseRAGAgentBuilder):
         """Create system prompt for another agent given an input task."""
         llm = BUILDER_LLM
         fmt_messages = GEN_SYS_PROMPT_TMPL.format_messages(task=task)
+        # LINEAJE: enforce() `fmt_messages` at agent->llm pre_model — scan flagged AI_DAT_SEC_029 (Enforce decision logging, audit trail, and forensic readiness for AI-driven actions.); AI_DAT_SEC_030 (Enforce minimum six-month log retention for high-risk AI systems). Mask/block; do not remove without review. site_id='site:sha256:169b42d4a07e7c2c89720c6f4b00da39dab6aa67bcff6cc71a289604ecf34e1d'
+        _lineaje_fmt_messages_evidence = {'fmt_messages': fmt_messages, 'model': (__import__("os").getenv("OPENROUTER_MODEL") or __import__("os").getenv("LLM_MODEL") or ""), 'project': 'lineaje-openclaw'}
+        _gr_client = _lineaje_load_gr_client()
+        _gr_site = _gr_client.SiteDescriptor(site_id='site:sha256:169b42d4a07e7c2c89720c6f4b00da39dab6aa67bcff6cc71a289604ecf34e1d', phase='pre_model', boundary={'source': 'agent_message', 'sink': 'model'}, candidate_policies=[{'policy_id': 'AI_APP_SEC_006', 'guardrail_id': 'Enforce Approved LLM.', 'policy_version': '2026.08.1'}, {'policy_id': 'AI_APP_SEC_028', 'guardrail_id': 'Enforce Approved LLM', 'policy_version': '2026.08.1'}, {'policy_id': 'AI_APP_SEC_070', 'guardrail_id': 'Sanitize Prompt Injection', 'policy_version': '2026.08.1'}, {'policy_id': 'AI_DAT_SEC_011', 'guardrail_id': 'Redact PII', 'policy_version': '2026.08.1'}, {'policy_id': 'AI_DAT_SEC_029', 'guardrail_id': 'Emit immutable, forensic-ready audit records for all AI decisions.', 'policy_version': '2026.08.1'}], fail_mode='BLOCK', source_type='agent', destination_type='llm')
+        try:
+            _lineaje_fmt_messages_evidence = _gr_client.enforce(_gr_site, _lineaje_fmt_messages_evidence, content_type='application/json')
+            fmt_messages = _lineaje_fmt_messages_evidence.get('fmt_messages', fmt_messages) if isinstance(_lineaje_fmt_messages_evidence, dict) else fmt_messages
+        except _gr_client.GuardrailUnavailableError:
+            pass
+        except PermissionError:
+            raise
         response = llm.chat(fmt_messages)
         self._cache.system_prompt = response.message.content
 
